@@ -30,7 +30,6 @@ namespace PyriteDemoClient
         public float forceBasedPanSpeed = 100.0f;
         private Vector3 position;
         float speed = 0.0f;
-        public bool forceBasedPanningAndFovZoom = false;
 
         // Original members
         public float RotationDeltaRate = 20;
@@ -119,36 +118,20 @@ namespace PyriteDemoClient
         {
             bool processedInput = true;
             SetOrbitIconActive(false);
-            SetMoveIconActive(false);
+            if (_lastMove != Vector3.zero)
+            {
+                SetMoveIconActive(false);
+            }
+
 
             float scrollWheelSpeed = Input.GetAxis("Mouse ScrollWheel");
 
-            if (forceBasedPanningAndFovZoom)
-            {
-                Debug.Log(scrollWheelSpeed);
-                Camera.main.fieldOfView -= scrollWheelSpeed * Time.deltaTime * zoomRate;
-            }
-            
-            if (scrollWheelSpeed > 0.0f || scrollWheelSpeed < 0.0f)
-            {
-                if (scrollWheelSpeed > 0.005f)
-                {
-                    scrollWheelSpeed = 0.1f;
-                }
-                else if (scrollWheelSpeed < -0.005)
-                {
-                    scrollWheelSpeed = -0.1f;
-                } 
-                SetMoveIconActive(true);
-            }
+
+            Mathf.Clamp(scrollWheelSpeed, 0.1f, -0.1f);
 
             if (Input.GetMouseButton(2) || Mathf.Abs(scrollWheelSpeed) > 0.005)
             {
-                if (forceBasedPanningAndFovZoom)
-                {
-                    Camera.main.fieldOfView -= Input.GetAxis("Mouse Y") * Time.deltaTime * zoomRate * 0.125f;
-                }
-                else if (Mathf.Abs(scrollWheelSpeed) < 0.005)
+                if (Mathf.Abs(scrollWheelSpeed) < 0.005)
                 {
 
                     var mouseY = Input.GetAxis("Mouse Y");
@@ -160,9 +143,11 @@ namespace PyriteDemoClient
                         scrollWheelSpeed = -0.1f;
                     }
                 }
-                var deltaForward = scrollWheelSpeed * Time.deltaTime * zoomRate * 10;
-
-                transform.Translate(transform.forward * deltaForward, Space.World);
+                var deltaForward = scrollWheelSpeed * Time.deltaTime * zoomRate * 5;
+                var translation = transform.forward*deltaForward;
+                _lastMove = new Vector3(translation.x, translation.y, translation.z);
+                Debug.LogFormat("translation: {0}, {1}, {2}", translation.x, translation.y, translation.z);
+                transform.Translate(translation, Space.World);
                 SetMoveIconActive(true);
             }
             else if (Input.GetMouseButton(0))
@@ -185,20 +170,8 @@ namespace PyriteDemoClient
                 right = right * -Input.GetAxis("Mouse X");
                 forward = forward * -Input.GetAxis("Mouse Y");
 
-                Rigidbody rb = GetComponent<Rigidbody>();
-                    
-                if (forceBasedPanningAndFovZoom)
-                {
-                    rb.constraints = RigidbodyConstraints.FreezePositionY;
-                    Vector3 force = right + forward;
-                    rb.AddForce(force * forceBasedPanSpeed);
-
-                }
-                else
-                {
-                    transform.Translate(right * panSpeed, Space.World);
-                    transform.Translate(forward * panSpeed, Space.World);
-                }
+                transform.Translate(right * panSpeed, Space.World);
+                transform.Translate(forward * panSpeed, Space.World);
                 
                 SetMoveIconActive(true);
             }   else
@@ -206,8 +179,24 @@ namespace PyriteDemoClient
                 processedInput = false;
             }
             
-            if ( !forceBasedPanningAndFovZoom && (lastProcessed == InputProcessor.OrbitCamera || processedInput))
+            if ( (lastProcessed == InputProcessor.OrbitCamera || processedInput))
             {
+                if (!processedInput)
+                {
+                    if (momentumStartTime == 0)
+                    {
+                        momentumStartTime = Time.time;
+                    }
+                    float fraction = (Time.time - momentumStartTime)/0.7f;
+                    var momentum = Vector3.Lerp(_lastMove, Vector3.zero, fraction);
+                    var thisMove = new Vector3(
+                        momentum.x,
+                        momentum.y,
+                        momentum.z);
+                    transform.Translate(thisMove, Space.World);
+
+                }
+
                 _cameraOrientation.eulerAngles = new Vector3(_camPitch, _yaw, 0);
                 transform.rotation = Quaternion.Lerp(transform.rotation, _cameraOrientation, Time.deltaTime * zoomDampening);
             }
@@ -280,6 +269,7 @@ namespace PyriteDemoClient
 
             if (dX != 0.0f || dY != 0.0f || dZ != 0.0f || dYaw != 0.0f || dPitch != 0.0f)
             {
+                Debug.LogFormat("dxyz: {0}, {1}, {2}", dX, dY, dZ);
                 inputProcessed = true;
             }
 
