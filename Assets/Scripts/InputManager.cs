@@ -146,8 +146,9 @@ namespace PyriteDemoClient
                 var deltaForward = scrollWheelSpeed * Time.deltaTime * zoomRate * 5;
                 var translation = transform.forward*deltaForward;
                 _lastMove = new Vector3(translation.x, translation.y, translation.z);
-                Debug.LogFormat("translation: {0}, {1}, {2}", translation.x, translation.y, translation.z);
+                //Debug.LogFormat("translation: {0}, {1}, {2}", translation.x, translation.y, translation.z);
                 transform.Translate(translation, Space.World);
+                momentumStartTime = 0;
                 SetMoveIconActive(true);
             }
             else if (Input.GetMouseButton(0))
@@ -269,7 +270,7 @@ namespace PyriteDemoClient
 
             if (dX != 0.0f || dY != 0.0f || dZ != 0.0f || dYaw != 0.0f || dPitch != 0.0f)
             {
-                Debug.LogFormat("dxyz: {0}, {1}, {2}", dX, dY, dZ);
+                //Debug.LogFormat("dxyz: {0}, {1}, {2}", dX, dY, dZ);
                 inputProcessed = true;
             }
 
