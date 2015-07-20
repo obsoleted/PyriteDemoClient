@@ -485,9 +485,9 @@ MonoBehaviour:
   TranslationDeltaRate: 50
   TouchTranslationDeltaRate: .200000003
   InvertY: 0
-  altitudeIcon: {fileID: 0}
-  moveIcon: {fileID: 0}
-  orbitIcon: {fileID: 0}
+  altitudeIcon: {fileID: 1862778606}
+  moveIcon: {fileID: 1294885374}
+  orbitIcon: {fileID: 1812101197}
 --- !u!1 &1144268638
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +548,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
+--- !u!1 &1294885374 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 161226, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 2037390403}
+--- !u!1 &1812101197 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 127914, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 2037390403}
+--- !u!1 &1862778606 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 101108, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 2037390403}
 --- !u!1001 &2037390403
 Prefab:
   m_ObjectHideFlags: 0

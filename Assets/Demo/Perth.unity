@@ -597,9 +597,9 @@ MonoBehaviour:
   TranslationDeltaRate: 50
   TouchTranslationDeltaRate: .200000003
   InvertY: 0
-  altitudeIcon: {fileID: 0}
-  moveIcon: {fileID: 0}
-  orbitIcon: {fileID: 0}
+  altitudeIcon: {fileID: 1524741225}
+  moveIcon: {fileID: 1524741226}
+  orbitIcon: {fileID: 1524741224}
 --- !u!1 &940889497 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 180374, guid: 67295b4708f4e01439b361267a153a98, type: 2}
@@ -834,6 +834,18 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &1524741224 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 127914, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 1524741223}
+--- !u!1 &1524741225 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 101108, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 1524741223}
+--- !u!1 &1524741226 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 161226, guid: f4f5dabbc2890ea4da394da839ebc80b, type: 2}
+  m_PrefabInternal: {fileID: 1524741223}
 --- !u!1001 &1539603391
 Prefab:
   m_ObjectHideFlags: 0
