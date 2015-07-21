@@ -1,15 +1,12 @@
-﻿using UnityEngine;
-
-namespace PyriteDemoClient
+﻿namespace PyriteDemoClient
 {
-    using UnityStandardAssets.CrossPlatformInput;
+    using UnityEngine;
 
     enum InputProcessor
     {
         Original = 0,
         OrbitCamera
     }
-
 
     public class InputManager : MonoBehaviour
     {
@@ -144,10 +141,9 @@ namespace PyriteDemoClient
                     }
                 }
                 var deltaForward = scrollWheelSpeed * Time.deltaTime * zoomRate * 5;
-                var translation = transform.forward*deltaForward;
-                _lastMove = new Vector3(translation.x, translation.y, translation.z);
+                _lastMove = transform.forward * deltaForward;
                 //Debug.LogFormat("translation: {0}, {1}, {2}", translation.x, translation.y, translation.z);
-                transform.Translate(translation, Space.World);
+                transform.Translate(_lastMove, Space.World);
                 momentumStartTime = 0;
                 SetMoveIconActive(true);
             }
@@ -157,23 +153,22 @@ namespace PyriteDemoClient
                 _camPitch -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
 
                 _camPitch = ClampAngle(_camPitch, pitchMin, pitchMax);
-
-
+                
                 SetOrbitIconActive(true);
             }
             else if (Input.GetMouseButton(1)) // wasd
             {
-                //target.rotation = transform.rotation;
-
                 Vector3 right = new Vector3(transform.right.x, 0.0f, transform.right.z);
                 Vector3 forward = new Vector3(transform.forward.x, 0.0f, transform.forward.z);
-
-                right = right * -Input.GetAxis("Mouse X");
-                forward = forward * -Input.GetAxis("Mouse Y");
-
-                transform.Translate(right * panSpeed, Space.World);
-                transform.Translate(forward * panSpeed, Space.World);
-                
+                float dX = -Input.GetAxis("Mouse X");
+                float dY = -Input.GetAxis("Mouse Y");
+                dX = Mathf.Clamp(dX, -1.0f, 1.0f);
+                dY = Mathf.Clamp(dY, -1.0f, 1.0f);
+                right = right * dX;
+                forward = forward * dY; 
+                _lastMove = (right + forward) * panSpeed;
+                momentumStartTime = 0;
+                transform.Translate(_lastMove, Space.World);
                 SetMoveIconActive(true);
             }   else
             {
@@ -196,6 +191,10 @@ namespace PyriteDemoClient
                         momentum.z);
                     transform.Translate(thisMove, Space.World);
 
+                    if (thisMove != Vector3.zero)
+                    {
+                        SetMoveIconActive(true);
+                    }
                 }
 
                 _cameraOrientation.eulerAngles = new Vector3(_camPitch, _yaw, 0);
@@ -203,56 +202,6 @@ namespace PyriteDemoClient
             }
 
             return processedInput;
-        }
-
-        private void ProcessFlyCameraInput()
-        {
-            if (speed > 0.0f)
-            {
-                speed -= Time.deltaTime * (zoomRate / 2.0f);
-                if (speed < 0.0f)
-                {
-                    speed = 0.0f;
-                    SetMoveIconActive(false);
-                }
-            }
-
-            Vector3 xAxis = Vector3.zero;
-            Vector3 yAxis = Vector3.zero;
-
-            if (Input.GetMouseButton(1))
-            {
-                xAxis = (transform.right * -Input.GetAxis("Mouse X") * panSpeed);
-                yAxis = (transform.up * -Input.GetAxis("Mouse Y") * panSpeed);
-                speed = 0.0f;
-                SetMoveIconActive(true);
-            }
-            else
-            {
-                _yaw += Input.GetAxis("Mouse X") * xSpeed * 0.02f;
-                _camPitch -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
-
-                _camPitch = ClampAngle(_camPitch, pitchMin, pitchMax);
-
-                var desiredRotation = Quaternion.Euler(_camPitch, _yaw, 0);
-
-                transform.rotation = Quaternion.Lerp(transform.rotation, desiredRotation, Time.deltaTime * zoomDampening);
-            }
-
-
-            if (Input.GetMouseButton(0))
-            {
-                speed += Time.deltaTime * zoomRate;
-
-                if (speed > 0.0f)
-                {
-                    SetMoveIconActive(true);
-                }
-            }
-
-            position = position + (transform.forward * speed) + xAxis + yAxis;
-
-            transform.position = position;
         }
 
         bool ProcessOriginalInput()
