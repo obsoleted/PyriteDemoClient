@@ -34,22 +34,22 @@
 
         private static string _proxyUrl;
 
-		private static char[] _invalidFileCharacters;
-		
-		private static char[] InvalidFileCharacters
-        {
-		    get
-		    {
-		        if (_invalidFileCharacters == null)
-		        {
-		            var invalidChars = new List<char>(Path.GetInvalidFileNameChars());
-		            invalidChars.Add('?');
-		            invalidChars.Add('=');
-		            _invalidFileCharacters = invalidChars.ToArray();
-		        }
+        private static char[] _invalidFileCharacters;
 
-		        return _invalidFileCharacters;
-		    }
+        private static char[] InvalidFileCharacters
+        {
+            get
+            {
+                if (_invalidFileCharacters == null)
+                {
+                    var invalidChars = new List<char>(Path.GetInvalidFileNameChars());
+                    invalidChars.Add('?');
+                    invalidChars.Add('=');
+                    _invalidFileCharacters = invalidChars.ToArray();
+                }
+
+                return _invalidFileCharacters;
+            }
         }
 
         // MRU index for cache items. The key points to the node in the list that can be used to delete it or refresh it (move it to the end)
@@ -183,7 +183,12 @@
         {
             try
             {
-                File.WriteAllBytes(cacheFilePath, response);
+                using (FileStream fs = File.OpenWrite(cacheFilePath))
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    bw.Write(response, 0, response.Length);
+                }
+
                 InsertOrUpdateCacheEntry(cacheFilePath);
             }
             catch (Exception ex)

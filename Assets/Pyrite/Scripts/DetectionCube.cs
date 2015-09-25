@@ -17,7 +17,6 @@
         private Renderer _render;
         private int _x, _y, _z;
         private LoadCubeRequest _loadCubeRequest;
-
         private State _state;
 
         enum State
@@ -142,7 +141,10 @@
                 cubeToRelease.GetComponent<Renderer>().sharedMaterial = null;
                 lock (_manager.MaterialDataCache)
                 {
-                    _manager.MaterialDataCache.Release(material.mainTexture.name);
+                    if (material.mainTexture != null)
+                    {
+                        _manager.MaterialDataCache.Release(material.mainTexture.name);
+                    }
                 }
             }
 
@@ -201,10 +203,8 @@
             // When a child is loaded its loadCubeRequest is set to null
             // It is also in this state when no loading has been requested
             while (newDetectors.Any(cd =>
-            {
-                var cdAsIsRendered = cd.GetComponent<DetectionCube>();
-                return cdAsIsRendered._loadCubeRequest != null;
-            }))
+                !cd.GetComponent<DetectionCube>().Stable
+            ))
             {
                 yield return null;
                 if (ShouldHideModel)
@@ -217,7 +217,27 @@
             }
         }
 
-        private IEnumerator DestroyChildrenAfterLoading(IEnumerable<GameObject> childDetectors)
+        private bool Stable
+        {
+            get
+            {
+                switch(_state)
+                {
+                    case State.ModelLoaded:
+                        return true;
+                    case State.NotVisible:
+                        return true;
+                    case State.Upgraded:
+                        return _childDetectors.All((cd) =>
+                            cd.GetComponent<DetectionCube>().Stable
+                        );
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        private IEnumerator DestroyModelAfterChildDtectorsLoad(IEnumerable<GameObject> childDetectors)
         {
             yield return null;
             RemoveChildDetectors();
@@ -278,7 +298,7 @@
                 Debug.LogError("OnUpgradedDetectorCubesCreated called when in invalid state: " + _state);
             }
 
-            StartCoroutine(DestroyChildrenAfterLoading(addedDetectors));
+            StartCoroutine(DestroyModelAfterChildDtectorsLoad(addedDetectors));
         }
     }
 }

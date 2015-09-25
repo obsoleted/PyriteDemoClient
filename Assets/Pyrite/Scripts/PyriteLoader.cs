@@ -308,9 +308,9 @@
                         }
                         else
                         {
-                            lock (MaterialDataCache)
+                            if (request.MaterialData != null && request.MaterialData.DiffuseTex != null)
                             {
-                                if (request.MaterialData != null && request.MaterialData.DiffuseTex != null)
+                                lock (MaterialDataCache)
                                 {
                                     MaterialDataCache.Release(request.MaterialData.DiffuseTex.name);
                                 }
@@ -590,7 +590,7 @@
                 _geometryBufferCache.Remove(modelPath);
             }
 
-            if (RETRY_LIMIT > loadRequest.Failures)
+            if (RETRY_LIMIT < loadRequest.Failures)
             {
                 Debug.LogError("Retry limit hit for: " + modelPath);
                 Debug.LogError("Cube load failed for " + loadRequest);
@@ -715,11 +715,14 @@
                 {
                     foreach (var request in dependentRequests)
                     {
-                        request.MaterialData = materialData;
+                        if (!request.Cancelled)
+                        {
+                            request.MaterialData = materialData;
 
-                        MaterialDataCache.AddRef(request.MaterialData.DiffuseTexPath);
+                            MaterialDataCache.AddRef(request.MaterialData.DiffuseTexPath);
 
-                        MoveRequestForward(request);
+                            MoveRequestForward(request);
+                        }
                     }
                 }
                 // Now that added references for the dependent requests. We can release the interim reference
