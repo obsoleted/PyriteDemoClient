@@ -66,7 +66,8 @@
             // Use an unlit shader for the model if set
             if (useUnlitShader)
             {
-                m = new Material(UnlitShader);
+                m = new Material(UnlitShader);                                              
+                m.SetColor("_Color", Color.Lerp(Color.red,Color.green, md.Lod / 5.0f) );
             }
             else
             {

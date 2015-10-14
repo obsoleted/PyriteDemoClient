@@ -103,7 +103,24 @@
 
         private Vector3 GetTranslation()
         {
-            // Get absolute value of mouse or keyboard or touch
+            // Get absolute value of mouse or keyboard or touch or controller
+
+            // Controller
+
+            Vector3 controllerTranslation = Vector3.zero;
+            controllerTranslation.x = Input.GetAxis("XboxLS_X");
+            controllerTranslation.z = Input.GetAxis("XboxLS_Y");
+            controllerTranslation.y = Input.GetAxis("Xbox360ControllerTriggers");
+
+            //if(controllerTranslation.y != 0.0f)
+            //{
+            //    Debug.Log("X: " + controllerTranslation.x);
+            //    Debug.Log("Z: " + controllerTranslation.z);
+            //    Debug.Log("Y: " + controllerTranslation.y);
+            //}
+
+            bool controllerTranslated = controllerTranslation != Vector3.zero;
+
             // Mouse
             Vector3 keyboardTranslation = Vector3.zero;
 
@@ -182,22 +199,25 @@
             }
             bool mouseTranslated = mouseTranslation != Vector3.zero;
 
-            if (mouseTranslated || touchTranslated || keyboardTranslated)
+            if (mouseTranslated || touchTranslated || keyboardTranslated || controllerTranslated)
             {
-                _moving = true;
+                _moving = true;                                                                 
                 momentumStartTime = 0;
                 Vector3 translation = Vector3.zero;
                 translation.x = GetLargestAbs(mouseTranslation.x,
                     keyboardTranslation.x,
-                    touchTranslation.x);
+                    touchTranslation.x,
+                    controllerTranslation.x);
 
                 translation.y = GetLargestAbs(mouseTranslation.y,
                     keyboardTranslation.y,
-                    touchTranslation.y);
+                    touchTranslation.y,
+                    controllerTranslation.y);
 
                 translation.z = GetLargestAbs(mouseTranslation.z,
                     keyboardTranslation.z,
-                    touchTranslation.z);
+                    touchTranslation.z,
+                    controllerTranslation.z);
 
                 return translation;
             }
@@ -212,32 +232,33 @@
             }
         }
 
-        private float GetLargestAbs(float f1, float f2, float f3)
+        private float GetLargestAbs(float f1, float f2, float f3, float f4 = 0.0f)
         {
             float af1 = Mathf.Abs(f1);
             float af2 = Mathf.Abs(f2);
             float af3 = Mathf.Abs(f3);
+            float af4 = Mathf.Abs(f4);
 
             if (af1 > af2)
             {
                 if (af1 > af3)
                 {
-                    return f1;
+                    return af4 > af1 ? f4 : f1;
                 }
                 else
                 {
-                    return f3;
+                    return af4 > af3 ? f4 : f3;
                 }
             }
             else
             {
                 if (af2 > af3)
                 {
-                    return f2;
+                    return af4 > af2 ? f4 : f2;
                 }
                 else
                 {
-                    return f3;
+                    return af4 > af3 ? f4 : f3;
                 }
             }
 
@@ -278,8 +299,15 @@
                 _rotating = true;
             }
 
-            _yaw += GetLargestAbs(keyboardYaw, touchYaw, mouseYaw);
-            _camPitch += GetLargestAbs(keyboardPitch, touchPitch, mousePitch);
+            float controllerYaw = Input.GetAxis("XboxRS_X");
+            float controllerPitch = Input.GetAxis("XboxRS_Y");
+            if ( controllerYaw != 0.0f || controllerPitch != 0.0f)
+            {
+                _rotating = true;
+            }
+
+            _yaw += GetLargestAbs(keyboardYaw, touchYaw, mouseYaw, controllerYaw);
+            _camPitch += GetLargestAbs(keyboardPitch, touchPitch, mousePitch, controllerPitch);
             _camPitch = ClampAngle(_camPitch, pitchMin, pitchMax);
 
             Quaternion rotation = Quaternion.identity;
@@ -301,8 +329,9 @@
             _moving = _rotating = _altitudeChanging = false;
             _lastMove = GetTranslation();
             _cameraOrientation = GetRotation();
+            _cameraOrientation.eulerAngles -= new Vector3(_cameraOrientation.eulerAngles.x, 0, 0);
 
-            transform.rotation = Quaternion.Lerp(transform.rotation, _cameraOrientation, Time.time);
+            transform.rotation = Quaternion.Slerp(transform.rotation, _cameraOrientation, Time.deltaTime * RotationDeltaRate);
 
             var movementVector = _lastMove;
             var movementRotation = Quaternion.Euler(new Vector3(0f, transform.eulerAngles.y, 0f));
