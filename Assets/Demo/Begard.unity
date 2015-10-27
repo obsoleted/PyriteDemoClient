@@ -645,7 +645,7 @@ MonoBehaviour:
   UpgradeConstant: 0
   DowngradeFactor: 1.04999995
   DowngradeConstant: 0
-  UseWwwForTextures: 0
+  UseWwwForTextures: 1
   UseWwwForEbo: 0
   CacheFill: 0
   CacheSize: 40000
