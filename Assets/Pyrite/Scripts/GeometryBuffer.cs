@@ -324,7 +324,17 @@ namespace Pyrite
             {
                 Debug.LogErrorFormat("GameObject {0} had too many vertices", gameObject.name);
             }
+            //var lodGroup = gameObject.GetComponent<LODGroup>();
+            //if(lodGroup == null)
+            //{
+            //    lodGroup = gameObject.AddComponent<LODGroup>();
+            //    LOD[] lods = new LOD[1];
+            //    lods[0].screenRelativeTransitionHeight = 0.1f;
+            //    lodGroup.SetLODs(lods);
+            //}
 
+
+                                        
             var m = gameObject.GetComponent<MeshFilter>().mesh;
             m.vertices = Vertices;
             m.uv = UVs;

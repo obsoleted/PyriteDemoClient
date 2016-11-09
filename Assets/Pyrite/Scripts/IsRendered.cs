@@ -121,8 +121,11 @@
         }
 
         // Cleans up cube game object and deactivates it to return to object pool
-        private void ReleaseCubeGameObject(GameObject cubeToRelease)
+        private void ReleaseCubeGameObject(GameObject cubeToReleaseLod)
         {
+
+            cubeToReleaseLod.name = "Released: " + cubeToReleaseLod.name;
+            GameObject cubeToRelease = cubeToReleaseLod.GetComponent<LODGroup>().GetLODs()[0].renderers[0].gameObject;
             cubeToRelease.name = "Released: " + cubeToRelease.name;
             cubeToRelease.GetComponent<MeshFilter>().mesh.Clear();
             var material = cubeToRelease.GetComponent<Renderer>().sharedMaterial;
@@ -136,6 +139,7 @@
             }
 
             cubeToRelease.SetActive(false);
+            cubeToReleaseLod.SetActive(false);
         }
 
         // Cleans up detection cube game object and deactivates it to return to object pool

@@ -44,6 +44,9 @@
         [Tooltip("Prefab for base cube object that we will populate data")]
         public GameObject BaseModelCube;
 
+        [Tooltip("Lod test")]
+        public GameObject LodBase;
+
         [Header("Server Options")]
         public string PyriteServer;
 
@@ -97,7 +100,7 @@
 
         [HideInInspector]
         public MaterialDataCache MaterialDataCache { get; private set; }
-        
+
         // Holds memory cache of geometry buffers for model construction
         private DictionaryCache<string, GeometryBuffer> _geometryBufferCache;
 
@@ -128,7 +131,7 @@
         private PyriteSetVersionDetailLevel _pyriteLevel;
 
         private string ModelFormatString;
-        
+
         private void Start()
         {
             if (string.IsNullOrEmpty(SetName))
@@ -167,12 +170,12 @@
 
         void OnDestroy()
         {
-            if(MaterialDataCache != null)
+            if (MaterialDataCache != null)
             {
                 MaterialDataCache.Empty();
             }
 
-            if(_geometryBufferCache != null)
+            if (_geometryBufferCache != null)
             {
                 _geometryBufferCache.Empty();
             }
@@ -211,6 +214,7 @@
             }
 
             ObjectPooler.Current.CreatePoolForObject(BaseModelCube);
+            ObjectPooler.Current.CreatePoolForObject(LodBase);
 
             // Optional pool only used in camera detection scenario
             if (PlaceHolderCube != null)
@@ -433,9 +437,9 @@
         {
             return new PyriteCube
             {
-                X = (int) cubeBounds.BoundingBox.Min.x,
-                Y = (int) cubeBounds.BoundingBox.Min.y,
-                Z = (int) cubeBounds.BoundingBox.Min.z
+                X = (int)cubeBounds.BoundingBox.Min.x,
+                Y = (int)cubeBounds.BoundingBox.Min.y,
+                Z = (int)cubeBounds.BoundingBox.Min.z
             };
         }
 
@@ -540,12 +544,12 @@
             var pyriteLevel = pyriteQuery.DetailLevels[newLod];
 
             var cubeFactor = pyriteQuery.GetNextCubeFactor(lod);
-            var min = new Vector3(x * (int) cubeFactor.x + 0.5f, y * (int) cubeFactor.y + 0.5f,
-                z * (int) cubeFactor.z + 0.5f);
-            var max = new Vector3((x + 1) * (int) cubeFactor.x - 0.5f, (y + 1) * (int) cubeFactor.y - 0.5f,
-                (z + 1) * (int) cubeFactor.z - 0.5f);
+            var min = new Vector3(x * (int)cubeFactor.x + 0.5f, y * (int)cubeFactor.y + 0.5f,
+                z * (int)cubeFactor.z + 0.5f);
+            var max = new Vector3((x + 1) * (int)cubeFactor.x - 0.5f, (y + 1) * (int)cubeFactor.y - 0.5f,
+                (z + 1) * (int)cubeFactor.z - 0.5f);
             var intersections =
-                pyriteQuery.DetailLevels[newLod].Octree.AllIntersections(new BoundingBox {Min = min, Max = max});
+                pyriteQuery.DetailLevels[newLod].Octree.AllIntersections(new BoundingBox { Min = min, Max = max });
             foreach (var i in intersections)
             {
                 var newCube = CreateCubeFromCubeBounds(i.Object);
@@ -916,8 +920,8 @@
                 loadRequest.Query.DetailLevels[loadRequest.LodIndex];
             var textureCoordinates = pyriteLevel.TextureCoordinatesForCube(loadRequest.X, loadRequest.Y);
             var texturePath = loadRequest.Query.GetTexturePath(loadRequest.LodIndex,
-                (int) textureCoordinates.x,
-                (int) textureCoordinates.y);
+                (int)textureCoordinates.x,
+                (int)textureCoordinates.y);
 
             while (!Monitor.TryEnter(MaterialDataCache))
             {
@@ -940,8 +944,8 @@
                         // Set to null to signal to other tasks that the key is in the process
                         // of being filled
                         MaterialDataCache[texturePath] = null;
-                        var materialData = CubeBuilderHelpers.GetDefaultMaterialData((int) textureCoordinates.x,
-                            (int) textureCoordinates.y, loadRequest.LodIndex,
+                        var materialData = CubeBuilderHelpers.GetDefaultMaterialData((int)textureCoordinates.x,
+                            (int)textureCoordinates.y, loadRequest.LodIndex,
                             texturePath);
                         var cachePath = CacheWebRequest.GetCacheFilePath(texturePath);
                         if (!CacheFill)
@@ -989,8 +993,8 @@
                         // Set to null to signal to other tasks that the key is in the process
                         // of being filled
                         MaterialDataCache[texturePath] = null;
-                        var materialData = CubeBuilderHelpers.GetDefaultMaterialData((int) textureCoordinates.x,
-                            (int) textureCoordinates.y, loadRequest.LodIndex,
+                        var materialData = CubeBuilderHelpers.GetDefaultMaterialData((int)textureCoordinates.x,
+                            (int)textureCoordinates.y, loadRequest.LodIndex,
                             texturePath);
                         _partiallyConstructedMaterialDatas[texturePath] = materialData;
 
@@ -1116,15 +1120,25 @@
             cubeName.Append('_');
             cubeName.Append(z);
 
+            var newCubeLod = ObjectPooler.Current.GetPooledObject(LodBase);
+            var lodGroup = newCubeLod.GetComponent<LODGroup>();
             var newCube = ObjectPooler.Current.GetPooledObject(BaseModelCube);
+            newCube.transform.parent = newCubeLod.transform;
             newCube.name = cubeName.ToString();
+
             buffer.PopulateMeshes(newCube, materialData.Material);
+
             // Put object in scene, claim from pool
+            var lods = lodGroup.GetLODs();
+            lods[0].renderers = new Renderer[] { newCube.GetComponent<MeshRenderer>() };
+            lodGroup.SetLODs(lods);
             newCube.SetActive(true);
+            newCubeLod.SetActive(true);
+
 
             if (registerCreatedObjects != null)
-            {
-                registerCreatedObjects(newCube);
+            { 
+                registerCreatedObjects(newCubeLod);
             }
         }
     }
